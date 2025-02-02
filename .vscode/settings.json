@@ -1,0 +1,8 @@
+{
+  "files.associations": {
+    "app-indicator.h": "c",
+    "cstdlib": "c",
+    "gtk.h": "c",
+    "stdio.h": "c"
+  }
+}
