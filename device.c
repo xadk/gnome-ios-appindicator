@@ -89,8 +89,12 @@ void* handle_device_thread(void *arg) {
         plist_get_string_val(node, &device_info_params->device_name);
 
     if (device_info_params->device_name && device_info_params->product_version) {
-        update_menu_item_label(GTK_MENU_ITEM(tray->widgets->info), g_strdup_printf("📱 %s (IOS %s)", device_info_params->device_name, device_info_params->product_version));
-        gtk_widget_show(tray->widgets->info);
+        char *info_label = g_strdup_printf("📱 %s (IOS %s)", device_info_params->device_name, device_info_params->product_version);
+        if (info_label != NULL) {
+            update_menu_item_label(GTK_MENU_ITEM(tray->widgets->info), info_label);
+            gtk_widget_show(tray->widgets->info);
+            g_free(info_label);
+        }
     }
 
     /**
@@ -101,41 +105,86 @@ void* handle_device_thread(void *arg) {
     if ((node = plist_dict_get_item(device_info, "MobileEquipmentIdentifier")) != NULL) {
         plist_get_string_val(node, &device_info_params->meid);
         if (device_info_params->meid != NULL) {
-            update_menu_item_label(GTK_MENU_ITEM(tray->widgets->meid), g_strdup_printf(" MEID: %s", device_info_params->meid));
-            gtk_widget_show(tray->widgets->meid);
+            char *meid_label = g_strdup_printf(" MEID: %s", device_info_params->meid);
+            if (meid_label != NULL) {
+                update_menu_item_label(GTK_MENU_ITEM(tray->widgets->meid), meid_label);
+                gtk_widget_show(tray->widgets->meid);
+                g_free(meid_label);
+            } else {
+                gtk_widget_hide(tray->widgets->meid);
+            }
         }
     }
 
     if ((node = plist_dict_get_item(device_info, "InternationalMobileEquipmentIdentity")) != NULL)  {
         plist_get_string_val(node, &device_info_params->imei);
         if (device_info_params->imei != NULL) {
-            update_menu_item_label(GTK_MENU_ITEM(tray->widgets->imei), g_strdup_printf(" IMEI: %s", device_info_params->imei));
-            gtk_widget_show(tray->widgets->imei);
+            char *imei_label = g_strdup_printf(" IMEI: %s", device_info_params->imei);
+            if (imei_label != NULL) {
+                update_menu_item_label(GTK_MENU_ITEM(tray->widgets->imei), imei_label);
+                gtk_widget_show(tray->widgets->imei);
+                g_free(imei_label);
+            } else {
+                gtk_widget_hide(tray->widgets->imei);
+            }
         }
     }
 
     if ((node = plist_dict_get_item(device_info, "DeviceColor")) != NULL)  {
         plist_get_string_val(node, &device_info_params->color);
         if (device_info_params->color != NULL) {
-            update_menu_item_label(GTK_MENU_ITEM(tray->widgets->color), g_strdup_printf(" Color: %s", device_info_params->color));
-            gtk_widget_show(tray->widgets->color);
+            char *color_label = g_strdup_printf(" Color: %s", device_info_params->color);
+            if (color_label != NULL) {
+                update_menu_item_label(GTK_MENU_ITEM(tray->widgets->color), color_label);
+                gtk_widget_show(tray->widgets->color);
+                g_free(color_label);
+            } else {
+                gtk_widget_hide(tray->widgets->color);
+            }
         }
     }
 
     if ((node = plist_dict_get_item(device_info, "PhoneNumber")) != NULL) {
         plist_get_string_val(node, &device_info_params->msisdn);
         if (device_info_params->msisdn != NULL) {
-            update_menu_item_label(GTK_MENU_ITEM(tray->widgets->msisdn), g_strdup_printf(" Phone: %s", device_info_params->msisdn));
-            gtk_widget_show(tray->widgets->msisdn);
+            char *msisdn_label = g_strdup_printf(" Phone: %s", device_info_params->msisdn);
+            if (msisdn_label != NULL) {
+                update_menu_item_label(GTK_MENU_ITEM(tray->widgets->msisdn), msisdn_label);
+                gtk_widget_show(tray->widgets->msisdn);
+                g_free(msisdn_label);
+            } else {
+                gtk_widget_hide(tray->widgets->msisdn);
+            }
         }
     }
 
     if ((node = plist_dict_get_item(device_info, "ActivationState")) != NULL) {
         plist_get_string_val(node, &device_info_params->is_activated);
         if (device_info_params->is_activated != NULL) {
-            update_menu_item_label(GTK_MENU_ITEM(tray->widgets->is_activated), g_strdup_printf(" Activation: %s", device_info_params->is_activated));
-            gtk_widget_show(tray->widgets->is_activated);
+            char *is_activated_label = g_strdup_printf(" Activation: %s", device_info_params->is_activated);
+            if (is_activated_label != NULL) {
+                update_menu_item_label(GTK_MENU_ITEM(tray->widgets->is_activated), is_activated_label);
+                gtk_widget_show(tray->widgets->is_activated);
+                g_free(is_activated_label);
+            } else {
+                gtk_widget_hide(tray->widgets->is_activated);
+            }
         }
+    }
+
+    // Cleanup
+    if (device_info_params->device_class) free(device_info_params->device_class);
+    if (device_info_params->product_name) free(device_info_params->product_name);
+    if (device_info_params->product_version) free(device_info_params->product_version);
+    if (device_info_params->device_name) free(device_info_params->device_name);
+    if (device_info_params->meid) free(device_info_params->meid);
+    if (device_info_params->imei) free(device_info_params->imei);
+    if (device_info_params->msisdn) free(device_info_params->msisdn);
+    if (device_info_params->is_activated) free(device_info_params->is_activated);
+    if (device_info_params->color) free(device_info_params->color);
+    if (device_info != NULL) {
+        plist_free(device_info);
+        node = NULL;
     }
 
     /**
@@ -145,43 +194,26 @@ void* handle_device_thread(void *arg) {
     plist_t storage_info = NULL;
     if (lockdownd_get_value(client, "com.apple.disk_usage", NULL, &storage_info) == LOCKDOWN_E_SUCCESS && storage_info != NULL) {
         int64_t total_disk_capacity = 0;
-        int64_t amount_restore_available = 0;
-        int64_t total_data_capacity = 0;
         int64_t amount_data_available = 0;
-        int64_t amount_data_reserved = 0;
-
-        node = plist_dict_get_item(storage_info, "TotalDiskCapacity");
-        if (node != NULL) plist_get_int_val(node, &total_disk_capacity);
-        node = plist_dict_get_item(storage_info, "AmountRestoreAvailable");
-        if (node != NULL) plist_get_int_val(node, &amount_restore_available);
-        node = plist_dict_get_item(storage_info, "TotalDataCapacity");
-        if (node != NULL) plist_get_int_val(node, &total_data_capacity);
-        node = plist_dict_get_item(storage_info, "AmountDataAvailable");
-        if (node != NULL) plist_get_int_val(node, &amount_data_available);
-        node = plist_dict_get_item(storage_info, "AmountDataReserved");
-        if (node != NULL) plist_get_int_val(node, &amount_data_reserved);
-
-        if (total_disk_capacity > 0) {
-            int64_t storage_used_int = ((total_data_capacity - (amount_data_available + amount_restore_available)) - amount_data_reserved);
-            if (storage_used_int > 0) {
-                double storage_used =  storage_used_int / 1000000000.0;
-                char *storage_label = g_strdup_printf(" Storage: %.2fGB / %ldGB", storage_used, total_disk_capacity / 1000000000);
-                if (storage_label != NULL) {
-                    update_menu_item_label(GTK_MENU_ITEM(tray->widgets->storage), storage_label);
-                    g_free(storage_label);
-                }
+        if ((node = plist_dict_get_item(storage_info, "TotalDiskCapacity")) != NULL) plist_get_int_val(node, &total_disk_capacity);
+        if ((node = plist_dict_get_item(storage_info, "AmountDataAvailable")) != NULL) plist_get_int_val(node, &amount_data_available);
+        if (total_disk_capacity > 0 && amount_data_available > 0) {
+            double storage_used =  (total_disk_capacity - amount_data_available) / 1000000000.0;
+            char *storage_label = g_strdup_printf(" Storage: %.1fGB / %ldGB used", storage_used, total_disk_capacity / 1000000000);
+            if (storage_label != NULL) {
+                update_menu_item_label(GTK_MENU_ITEM(tray->widgets->storage), storage_label);
+                g_free(storage_label);
             }
         } else {
             fprintf(stderr, "[UDID=%s][Thread] Total disk capacity is zero or invalid\n", args->udid);
         }
-
+    }
+    if (storage_info != NULL) {
         gtk_widget_show(tray->widgets->storage);
+        plist_free(storage_info);
+        node = NULL;
     } else {
         gtk_widget_hide(tray->widgets->storage);
-    }
-
-    if (storage_info != NULL) {
-        plist_free(storage_info);
     }
 
     /**
@@ -201,32 +233,44 @@ void* handle_device_thread(void *arg) {
         if (lockdownd_get_value(client, NULL, NULL, &device_info) == LOCKDOWN_E_SUCCESS && device_info != NULL) {
             if ((node = plist_dict_get_item(device_info, "PasswordProtected")) != NULL) {
                 plist_get_bool_val(node, &device_info_params->is_passwd);
-                update_menu_item_label(GTK_MENU_ITEM(tray->widgets->is_passwd), g_strdup_printf(" Password Protected: %s", device_info_params->is_passwd == 1 ? "yes" : "no"));
-                gtk_widget_show(tray->widgets->is_passwd);
+                char *passwd_label = g_strdup_printf(" Password Protected: %s", device_info_params->is_passwd == 1 ? "yes" : "no");
+                if (passwd_label != NULL) {
+                    update_menu_item_label(GTK_MENU_ITEM(tray->widgets->is_passwd), passwd_label);
+                    g_free(passwd_label);
+                }
             }
         } else {
             fprintf(stderr, "[UDID=%s][Thread][Loop] Failed to get device information\n", args->udid);
+        }
+
+        if (device_info != NULL) {
+            gtk_widget_show(tray->widgets->is_passwd);
+            plist_free(device_info);
+            node = NULL;
+        } else {
+            gtk_widget_hide(tray->widgets->is_passwd);
         }
 
         // Battery information
         plist_t battery_info = NULL;
         if (lockdownd_get_value(client, "com.apple.mobile.battery", NULL, &battery_info) == LOCKDOWN_E_SUCCESS && battery_info != NULL) {
             int64_t battery_level = -1;
-            node = plist_dict_get_item(battery_info, "BatteryCurrentCapacity");
-            if (node != NULL) plist_get_int_val(node, &battery_level);
-
-            if (tray->widgets->battery != NULL && battery_level >= 0) {
-                char *battery_label = g_strdup_printf(" Battery: %ld%%", battery_level);
-                if (battery_label != NULL) {
-                    update_menu_item_label(GTK_MENU_ITEM(tray->widgets->battery), battery_label);
-                    g_free(battery_label);
+            if ((node = plist_dict_get_item(battery_info, "BatteryCurrentCapacity")) != NULL) {
+                plist_get_int_val(node, &battery_level);
+                if (battery_level >= 0) {
+                    char *battery_label = g_strdup_printf(" Battery: %ld%%", battery_level);
+                    if (battery_label != NULL) {
+                        update_menu_item_label(GTK_MENU_ITEM(tray->widgets->battery), battery_label);
+                        g_free(battery_label);
+                    }
                 }
             }
         }
 
         if (battery_info != NULL) {
-            plist_free(battery_info);
             gtk_widget_show(tray->widgets->battery);
+            plist_free(battery_info);
+            node = NULL;
         } else {
             gtk_widget_hide(tray->widgets->battery);
         }
@@ -237,17 +281,16 @@ void* handle_device_thread(void *arg) {
     /**
      * Cleanup
      */
-    if (device_info_params->device_class) free(device_info_params->device_class);
-    if (device_info_params->product_name) free(device_info_params->product_name);
-    if (device_info_params->product_version) free(device_info_params->product_version);
-    if (device_info_params->device_name) free(device_info_params->device_name);
-    if (device_info_params->meid) free(device_info_params->meid);
-    if (device_info_params->imei) free(device_info_params->imei);
-    if (device_info_params->msisdn) free(device_info_params->msisdn);
-    if (device_info_params->is_activated) free(device_info_params->is_activated);
-
-    free(device_info_params);
-    plist_free(device_info);
+    gtk_widget_hide(tray->widgets->info);
+    gtk_widget_hide(tray->widgets->battery);
+    gtk_widget_hide(tray->widgets->storage);
+    gtk_widget_hide(tray->widgets->meid);
+    gtk_widget_hide(tray->widgets->imei);
+    gtk_widget_hide(tray->widgets->color);
+    gtk_widget_hide(tray->widgets->msisdn);
+    gtk_widget_hide(tray->widgets->is_activated);
+    gtk_widget_hide(tray->widgets->is_passwd);
+    if (device_info_params) free(device_info_params);
     lockdownd_client_free(client);
     idevice_free(device);
     free(args);
